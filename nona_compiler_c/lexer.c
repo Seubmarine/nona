@@ -1,41 +1,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-
-enum token_type
-{
-    //Keyword
-    token_let,
-    token_return,
-
-    //Literal
-    token_integer,
-
-    //Separator
-    token_semicolon, // ;
-    token_colon, // ;
-    token_eof,
-    
-    //Operator
-    token_assignement, // =
-    token_equal, // ==
-    token_addition, // +
-
-    //Identifier
-    token_identifier,
-};
-
-struct span
-{
-    size_t begin;
-    size_t end;
-};
-
-struct token
-{
-    enum token_type type;
-    struct span span;
-};
+#include "nona.h"
+#include "lexer.h"
 
 struct keyword_compare {
     char const *identifer;
@@ -56,6 +23,7 @@ int is_keyword(char *str) {
 int str_to_token(char *str, size_t str_i, struct token *token) {
     while (isspace(str[str_i]))
         str_i++;
+    token->span.begin = str_i;
     if (str[str_i] == '\0')
     {
         token->type = token_eof;
@@ -98,15 +66,6 @@ int str_to_token(char *str, size_t str_i, struct token *token) {
     return (0);
 }
 
-enum token_category {
-    token_category_keyword,
-    token_category_separator,
-    token_category_identifier,
-    token_category_operator,
-    token_category_literal,
-    token_category_unknown,
-};
-
 enum token_category get_token_category(struct token tok) {
     switch (tok.type)
     {
@@ -139,7 +98,6 @@ enum token_category get_token_category(struct token tok) {
     }
 }
 
-#define debug_stream stdout
 void token_print_debug(char *filestr, struct token tok)
 {
     enum token_category category = get_token_category(tok);
@@ -178,17 +136,18 @@ int tokenize_file(char *filestr)
     while (1)
     {
         if (str_to_token(filestr, filestr_i, &tokens[token_i]) == 0)
-        {
-            if (tokens[token_i].type == token_eof)
-                break ;
-            return (0);
-        }
+            break ;
         filestr_i = tokens[token_i].span.end;
         token_i++;
     }
-    for (size_t i = 0; tokens[i].type != token_eof; i++)
+    for (size_t i = 0; i < token_i; i++)
     {
         token_print_debug(filestr, tokens[i]);
+    }
+    if (tokens[token_i].type != token_eof)
+    {
+        fprintf(debug_stream, "Nona: found invalid character at position: %zu\n", tokens[token_i].span.begin);
+        return (0);
     }
     return (1);
 }

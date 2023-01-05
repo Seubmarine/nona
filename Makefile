@@ -3,6 +3,7 @@ CC = gcc
 CFLAGS = -g3
 
 SRCS = nona_compiler_c/lexer.c
+INCLUDE = -Inona_compiler_c
 
 OBJS = $(SRCS:.c=.o)
 
