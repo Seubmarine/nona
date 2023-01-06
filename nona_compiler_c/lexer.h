@@ -3,6 +3,9 @@
 # include <stdlib.h>
 enum token_type
 {
+    //Unknown
+    token_unknown,
+
     //Keyword
     token_let,
     token_return,
@@ -32,8 +35,8 @@ struct span
 
 struct token
 {
-    enum token_type type;
     struct span span;
+    enum token_type type;
 };
 
 enum token_category {

@@ -63,6 +63,8 @@ int str_to_token(char *str, size_t str_i, struct token *token) {
             return (1);
         }
     }
+    token->type = token_unknown;
+    token->span.end = token->span.begin + 1;
     return (0);
 }
 
@@ -128,15 +130,23 @@ void token_print_debug(char *filestr, struct token tok)
     fprintf(debug_stream, ")\n");
 }
 
+#include "string_interning.h"
 int tokenize_file(char *filestr)
 {
-    struct token   tokens[256];
+    size_t tokens_cap = 2048;
+    struct token   *tokens = calloc(tokens_cap, sizeof(*tokens));
     size_t token_i = 0;
     size_t filestr_i = 0;
     while (1)
     {
-        if (str_to_token(filestr, filestr_i, &tokens[token_i]) == 0)
-            break ;
+        if (token_i >= tokens_cap)
+        {
+            tokens_cap *= 2;
+            tokens = realloc(tokens, sizeof(*tokens) * tokens_cap);
+        }
+        str_to_token(filestr, filestr_i, &tokens[token_i]);
+        if (tokens[token_i].type == token_eof)
+            break;
         filestr_i = tokens[token_i].span.end;
         token_i++;
     }
@@ -149,6 +159,24 @@ int tokenize_file(char *filestr)
         fprintf(debug_stream, "Nona: found invalid character at position: %zu\n", tokens[token_i].span.begin);
         return (0);
     }
+    struct string_interner si = string_interner_init();
+    size_t identifier_n = 0;
+    for (size_t i = 0; i < token_i; i++)
+    {
+        if (tokens[i].type == token_identifier)
+            identifier_n += 1;
+        if (tokens[i].type == token_identifier)
+        {
+            struct span s = tokens[i].span;
+            char *tmp = string_intern(&si, &filestr[s.begin], s.end - s.begin);
+            printf("%p = %s\n", tmp, tmp);
+        }
+    }
+    printf("token count == %zi\n", token_i);
+    printf("identifier count == %zi\n", identifier_n);
+    printf("string interner cap: %zu len: %zu\n", si.capacity, si.length);
+    string_interner_free(&si);
+    free(tokens);
     return (1);
 }
 
@@ -173,7 +201,7 @@ int open_file(char const *filename)
         return (0);
     }
     fread(file_str, 1, length, file);
-    file_str[length] = '\0';
+    file_str[length - 1] = '\0';
     fclose(file);
     int ret = tokenize_file(file_str);
     free(file_str);
