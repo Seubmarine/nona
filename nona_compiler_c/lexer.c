@@ -208,19 +208,19 @@ int open_file(char const *filename)
     return (ret);
 }
 
-int main(int argc, char const *argv[])
-{
-    if (argc == 1)
-    {
-        printf("no input file\n");
-        return (1);
-    }
-    char *filename_separator = strchr(argv[1], '.');
-    if (filename_separator == NULL || strstr(filename_separator + 1, "nona") == NULL)
-    {
-        printf("input file doesn't have a valid extension\n");
-        return (1);
-    }
-    char const *filename = argv[1];
-    return (!open_file(filename));
-}
+// int main(int argc, char const *argv[])
+// {
+//     if (argc == 1)
+//     {
+//         printf("no input file\n");
+//         return (1);
+//     }
+//     char *filename_separator = strchr(argv[1], '.');
+//     if (filename_separator == NULL || strstr(filename_separator + 1, "nona") == NULL)
+//     {
+//         printf("input file doesn't have a valid extension\n");
+//         return (1);
+//     }
+//     char const *filename = argv[1];
+//     return (!open_file(filename));
+// }
