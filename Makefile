@@ -2,7 +2,7 @@ NAME = nona
 CC = gcc
 CFLAGS = -g3 -Wall -Wextra -Werror
 
-SRCS = nona_compiler_c/lexer.c nona_compiler_c/string_interning.c
+SRCS = nona_compiler_c/lexer.c nona_compiler_c/string_interning.c nona_compiler_c/hasher.c
 INCLUDE = -Inona_compiler_c
 
 OBJS = $(SRCS:.c=.o)
