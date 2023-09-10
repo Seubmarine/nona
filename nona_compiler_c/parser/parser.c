@@ -1,9 +1,63 @@
 #include "parser.h"
 #include "ast.h"
 
-// int operator_precedence(enum token_type a, enum token_type b) {
-//     return 0;
-// }
+void ast_traverse(struct expression_info *ast, uint32_t level ,void (*fn)(struct expression_info *, uint32_t))
+{
+    switch (ast->expression_type)
+    {
+    case expression_type_operation:
+        ast_traverse(TO_OPERATOR(ast)->lhs, level + 1, fn);
+        fn(ast, level);
+        ast_traverse(TO_OPERATOR(ast)->rhs, level + 1, fn);
+        break;
+    default:
+        fn(ast, level);
+    }
+}
+
+void print_ast(struct expression_info *expr, uint32_t level) {
+    for (size_t i = 0; i < level; i++)
+    {
+        printf("     ");
+    }
+    
+    switch (expr->expression_type)
+    {
+    case expression_type_literal:
+        struct literal *lit = (struct literal *)expr;
+        printf("%i", *(uint32_t *)lit->data);
+        break;
+    case expression_type_operation:
+        switch (TO_OPERATOR(expr)->op_type)
+        {
+        case operation_type_addition:
+            printf("+ ");
+            break;
+        case operation_type_multiply:
+            printf("* ");
+            break;
+        case operation_type_division:
+            printf("/ ");
+            break;
+        default:
+            printf("wtf ");
+            break;
+        } 
+    default:
+        break;
+    }
+    printf("\n");
+}
+
+int operator_precedence(enum operation_type a, enum operation_type b) {
+    int op_precedence_map[] = {
+        [operation_type_addition] = 4,
+        [operation_type_multiply] = 3,
+        [operation_type_division] = 3,
+        [operation_type_assign] = 2
+    };
+    return (op_precedence_map[a] <= op_precedence_map[b]);
+}
 
 void parse_token(parser *parser, struct expression_info **ast);
 
@@ -55,18 +109,32 @@ void parse_token_operation(parser *parser, struct expression_info **ast, struct 
     }
     
     struct expression_info *rhs = NULL;
+    struct expression_info *lhs = *ast;
     struct operation *op = NULL;
-    if (op_type == operation_type_division || op_type == operation_type_division) {
-        struct expression_info *lhs = *ast;        
-        parse_token(parser, &rhs);
-        *ast = TO_EXPR( operation_init(op_type, lhs, rhs, &parser->si) );
-        return ;
+    parse_token(parser, &rhs);
+    printf("Before:\n");
+    ast_traverse(*ast, 0, print_ast);
+    printf("After:\n");
+    
+    if (rhs->expression_type == expression_type_operation)
+    {
+        printf("rhs is an operation\n");
+        if (operator_precedence(op_type, TO_OPERATOR(rhs)->op_type)) {
+            printf("lfs is better than rhs\n");
+            struct expression_info *tmp = TO_OPERATOR(rhs)->lhs;
+            op = operation_init(op_type, lhs, tmp, &parser->si);
+            TO_OPERATOR(rhs)->lhs = TO_EXPR(op);
+            *ast = rhs;
+            ast_traverse(*ast, 0, print_ast);
+            return ;
+        }
     }
-    else {
-        parse_token(parser, &rhs);
-        op = operation_init(op_type, *ast, rhs, &parser->si);
-    }
+    if (lhs->expression_type == expression_type_operation)
+        printf("lhs is an operation\n");
+    
+    op = operation_init(op_type, *ast, rhs, &parser->si);
     *ast = (struct expression_info *)op;
+    ast_traverse(*ast, 0, print_ast);
 }
 
 void parse_token_literal(parser *parser, struct expression_info **ast, struct token token) {
@@ -110,5 +178,7 @@ parser parse_file(struct lexer_info lexing_info)
         .si = lexing_info.string_interner,
         .ast = NULL};
     parse_token(&parser, &parser.ast);
+    ast_traverse(parser.ast, 0, print_ast);
+    printf("\n");
     return (parser);
 }

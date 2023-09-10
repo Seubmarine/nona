@@ -44,6 +44,7 @@ struct variable {
 };
 
 #define TO_EXPR(x) ((struct expression_info *)x)
+#define TO_OPERATOR(x) ((struct operation *)x)
 
 void *operation_apply(struct operation *op, struct string_interner *si);
 struct literal *literal_init(uint32_t x, struct string_interner *si);
