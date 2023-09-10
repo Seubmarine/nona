@@ -1,0 +1,52 @@
+
+//OPERATOR
+expression     -> equality ;
+equality       -> comparison ( ( "!=" | "==" ) comparison )* ;
+comparison     -> term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
+term           -> factor ( ( "-" | "+" ) factor )* ;
+factor         -> unary ( ( "/" | "*" ) unary )* ;
+unary          -> ( "!" | "-" ) unary
+               | primary ;
+primary        -> NUMBER | identifier | * identifier | "true" | "false" | "nil"
+               | "(" expression ")" ;
+
+
+identifier      -> [A-Z]
+
+let_stmt        -> "let" identifer "=" expr
+
+block_expr      -> "{" expr "}"
+
+if_stmt         -> "if" expr block_expr 
+                    ("else" if_stmt)*
+                    ("else" block_expr)
+
+type_stmt       -> identifer ("<" type_stmt ("," type_stmt)* ">")
+
+//expr after in need to be an Iterator
+for_stmt        -> "for" identifier "in" expr block_expr
+
+
+
+//FUNCTION
+param_stmt      -> identifer identifer ("," param_stmt)*
+
+fn_stmt         -> "fn" identifer "(" param_stmt ")" ("->" identifier)
+
+param_expr      -> expr (, expr)*
+
+fn_call         -> identifer "(" param_expr ")"
+
+//STRUCT
+
+struct_param    -> identifier ":" type_stmt
+
+struct_stmt     -> "struct" identifer "{" (struct_param ("," struct_param)* ) "}"
+
+//ENUM
+
+enum_identifier -> identifier ( "(" type_stmt ")" )
+
+enum_stmt       -> "enum" identifier "{" enum_stmt "," enum_stmt ("," enum_stmt)* "}"
+
+match_expr      -> "match" expr "{" pattern "=>" expr "}"
