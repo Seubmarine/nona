@@ -1,6 +1,7 @@
 #ifndef LEXER_H
 #define LEXER_H
 # include <stdlib.h>
+# include "string_interning.h"
 enum token_type
 {
     //Unknown
@@ -22,6 +23,8 @@ enum token_type
     token_assignement, // =
     token_equal, // ==
     token_addition, // +
+    token_asterisk, // *
+    token_slash, // /
 
     //Identifier
     token_identifier,
@@ -48,5 +51,15 @@ enum token_category {
     token_category_unknown,
 };
 
-enum token_category get_token_category(struct token tok);
+struct lexer_info
+{
+    struct string_interner string_interner;
+    struct token *tokens;
+    char *file_str;
+    size_t token_length;
+};
+
+enum token_category get_token_category(enum token_type token_type);
+struct lexer_info lexer_file(char *filestr);
+
 #endif

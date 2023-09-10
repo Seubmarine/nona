@@ -37,6 +37,8 @@ int str_to_token(char *str, size_t str_i, struct token *token) {
         {";", token_semicolon},
         {":", token_colon},
         {"+", token_addition},
+        {"*", token_asterisk},
+        {"/", token_slash},
         {"=", token_assignement},
     };
     size_t keyword_size = is_keyword(&str[str_i]);
@@ -68,8 +70,8 @@ int str_to_token(char *str, size_t str_i, struct token *token) {
     return (0);
 }
 
-enum token_category get_token_category(struct token tok) {
-    switch (tok.type)
+enum token_category get_token_category(enum token_type token_type) {
+    switch (token_type)
     {
     case token_let:
         return (token_category_keyword);
@@ -92,7 +94,10 @@ enum token_category get_token_category(struct token tok) {
         return (token_category_operator);
     case token_addition:
         return (token_category_operator);
-
+    case token_asterisk:
+        return (token_category_operator);
+    case token_slash:
+        return (token_category_operator);
     case token_identifier:
         return (token_category_identifier);
     default:
@@ -102,7 +107,7 @@ enum token_category get_token_category(struct token tok) {
 
 void token_print_debug(char *filestr, struct token tok)
 {
-    enum token_category category = get_token_category(tok);
+    enum token_category category = get_token_category(tok.type);
     char const *category_str;
     switch (category)
     {
@@ -131,10 +136,11 @@ void token_print_debug(char *filestr, struct token tok)
 }
 
 #include "string_interning.h"
-int tokenize_file(char *filestr)
+struct lexer_info lexer_file(char *filestr)
 {
     size_t tokens_cap = 2048;
     struct token   *tokens = calloc(tokens_cap, sizeof(*tokens));
+    struct lexer_info lexing_info = {.token_length = 0, .tokens = NULL, .file_str = filestr};
     size_t token_i = 0;
     size_t filestr_i = 0;
     while (1)
@@ -157,7 +163,8 @@ int tokenize_file(char *filestr)
     if (tokens[token_i].type != token_eof)
     {
         fprintf(debug_stream, "Nona: found invalid character at position: %zu\n", tokens[token_i].span.begin);
-        return (0);
+        free(tokens);
+        return (lexing_info);
     }
     struct string_interner si = string_interner_init();
     size_t identifier_n = 0;
@@ -175,52 +182,10 @@ int tokenize_file(char *filestr)
     printf("token count == %zi\n", token_i);
     printf("identifier count == %zi\n", identifier_n);
     printf("string interner cap: %zu len: %zu\n", si.capacity, si.length);
-    string_interner_free(&si);
-    free(tokens);
-    return (1);
+    tokens = realloc(tokens, token_i);
+    lexing_info.string_interner = si;
+    lexing_info.token_length = token_i;
+    lexing_info.tokens = tokens;
+    lexing_info.file_str = filestr;
+    return (lexing_info);
 }
-
-int open_file(char const *filename)
-{
-    FILE *file = fopen(filename, "r");
-    if (file == NULL)
-    {
-        perror("Nona");
-        return (0);
-    }
-    char *file_str = NULL;
-    size_t length = 0;
-
-    fseek(file, 0, SEEK_END);
-    length = ftell(file) + 1;
-    fseek(file, 0, SEEK_SET);
-    file_str = malloc(length);
-    if (!file_str)
-    {
-        perror("Nona: couldn't malloc file");
-        return (0);
-    }
-    fread(file_str, 1, length, file);
-    file_str[length - 1] = '\0';
-    fclose(file);
-    int ret = tokenize_file(file_str);
-    free(file_str);
-    return (ret);
-}
-
-// int main(int argc, char const *argv[])
-// {
-//     if (argc == 1)
-//     {
-//         printf("no input file\n");
-//         return (1);
-//     }
-//     char *filename_separator = strchr(argv[1], '.');
-//     if (filename_separator == NULL || strstr(filename_separator + 1, "nona") == NULL)
-//     {
-//         printf("input file doesn't have a valid extension\n");
-//         return (1);
-//     }
-//     char const *filename = argv[1];
-//     return (!open_file(filename));
-// }
