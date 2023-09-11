@@ -6,9 +6,11 @@ typedef char * typeid;
 
 enum operation_type {
     operation_type_addition,
+    operation_type_substract,
     operation_type_assign,
     operation_type_multiply,
     operation_type_division,
+    operation_type_invalid,
 };
 
 enum expression_type {
@@ -40,7 +42,7 @@ struct literal {
 struct variable {
     struct expression_info info;
     char   *var_name;
-    u_int8_t data[];
+    uint8_t data[];
 };
 
 #define TO_EXPR(x) ((struct expression_info *)x)

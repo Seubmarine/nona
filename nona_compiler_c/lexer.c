@@ -36,10 +36,12 @@ int str_to_token(char *str, size_t str_i, struct token *token) {
         {"return", token_return},
         {";", token_semicolon},
         {":", token_colon},
-        {"+", token_addition},
+        {"+", token_plus},
         {"*", token_asterisk},
         {"/", token_slash},
-        {"=", token_assignement},
+        {"=", token_equal},
+        {"(", token_rbracket_left}, // (
+        {")", token_rbracket_right }, // )
     };
     size_t keyword_size = is_keyword(&str[str_i]);
     if (keyword_size) //if detected a possible keyword
@@ -88,11 +90,16 @@ enum token_category get_token_category(enum token_type token_type) {
     case token_eof:
         return (token_category_separator);
     
-    case token_assignement:
-        return (token_category_operator);
+    case token_rbracket_left:
+        return (token_category_bracket);
+    case token_rbracket_right:
+        return (token_category_bracket);
+
     case token_equal:
         return (token_category_operator);
-    case token_addition:
+    case token_equal_equal:
+        return (token_category_operator);
+    case token_plus:
         return (token_category_operator);
     case token_asterisk:
         return (token_category_operator);
@@ -125,6 +132,9 @@ void token_print_debug(char *filestr, struct token tok)
         break;
     case token_category_keyword:
         category_str = "Keyword";
+        break;
+    case token_category_bracket:
+        category_str = "Bracket";
         break;
     default:
         category_str = "ERROR";

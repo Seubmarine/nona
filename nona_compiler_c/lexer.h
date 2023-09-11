@@ -5,26 +5,36 @@
 enum token_type
 {
     //Unknown
-    token_unknown,
+    token_unknown,      // something not possible
 
     //Keyword
-    token_let,
-    token_return,
+    token_let,          // "let"
+    token_return,       // "return"
 
     //Literal
     token_integer,
 
+    //Brackets
+    token_rbracket_left, // (
+    token_rbracket_right, // )
+
+
     //Separator
-    token_semicolon, // ;
-    token_colon, // ;
-    token_eof,
+    token_semicolon,    // ;
+    token_colon,        // :
+    token_eof,          // EOF \0
     
     //Operator
-    token_assignement, // =
-    token_equal, // ==
-    token_addition, // +
-    token_asterisk, // *
-    token_slash, // /
+    token_plus,         // +
+    token_dash,         // -
+    token_asterisk,     // *
+    token_equal,        // =
+    token_slash,        // /
+    token_bang,         // !
+
+    //Comparison
+    token_equal_equal,  // ==
+    token_bang_equal,   // !=
 
     //Identifier
     token_identifier,
@@ -48,6 +58,7 @@ enum token_category {
     token_category_identifier,
     token_category_operator,
     token_category_literal,
+    token_category_bracket,
     token_category_unknown,
 };
 
