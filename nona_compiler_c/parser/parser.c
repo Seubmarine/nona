@@ -198,6 +198,9 @@ void print_ast(struct expression_info *expr, uint32_t level) {
         case operation_type_division:
             printf("/ ");
             break;
+        case operation_type_substract:
+            printf("- ");
+            break;
         default:
             printf("wtf ");
             break;

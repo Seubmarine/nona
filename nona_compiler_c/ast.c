@@ -13,6 +13,11 @@ int32_t i32_add(int32_t a, int32_t b) {
     return (a + b);
 }
 
+int32_t i32_sub(int32_t a, int32_t b) {
+    printf("a: %i b: %i addition: %i\n", a, b, a - b);
+    return (a - b);
+}
+
 int32_t i32_multiply(int32_t a, int32_t b) {
     printf("a: %i b: %i multiply: %i\n", a, b, a * b);
     return (a * b);
@@ -65,6 +70,11 @@ void *operation_apply(struct operation *op, struct string_interner *si)
     else if (op->op_type == operation_type_division) {
         if (op->expr_info.return_type == string_intern(si, "i32", 3))
             *(uint32_t *)op->data = i32_division(*(uint32_t *)left, *(uint32_t *)right);
+        return (op->data);
+    }
+    else if (op->op_type == operation_type_substract) {
+        if (op->expr_info.return_type == string_intern(si, "i32", 3))
+            *(uint32_t *)op->data = i32_sub(*(uint32_t *)left, *(uint32_t *)right);
         return (op->data);
     }
     else if (op->op_type == operation_type_assign && op->lhs->expression_type == expression_type_variable)

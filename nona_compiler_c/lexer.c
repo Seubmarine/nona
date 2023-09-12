@@ -37,6 +37,7 @@ int str_to_token(char *str, size_t str_i, struct token *token) {
         {";", token_semicolon},
         {":", token_colon},
         {"+", token_plus},
+        {"-", token_dash},
         {"*", token_asterisk},
         {"/", token_slash},
         {"=", token_equal},
@@ -105,6 +106,9 @@ enum token_category get_token_category(enum token_type token_type) {
         return (token_category_operator);
     case token_slash:
         return (token_category_operator);
+    case token_dash:
+        return (token_category_operator);
+
     case token_identifier:
         return (token_category_identifier);
     default:
