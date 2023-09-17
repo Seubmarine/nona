@@ -1,5 +1,7 @@
 
 //OPERATOR
+structure_ref  -> identifer ("." structure_ref)*
+
 expression     -> equality ;
 equality       -> comparison ( ( "!=" | "==" ) comparison )* ;
 comparison     -> term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
@@ -10,10 +12,11 @@ unary          -> ( "!" | "-" ) unary
 primary        -> NUMBER | identifier | * identifier | "true" | "false" | "nil"
                | "(" expression ")" | block_expr;
 
+assign          -> (identifier "=") expr
+let_stmt        -> "let" identifier (":" type) "=" expr
 
-identifier      -> [A-Z]
+identifier      -> [A-Z] 
 
-let_stmt        -> "let" identifer "=" expr
 
 block_expr      -> "{" (expr ';')* (expr) "}"
 

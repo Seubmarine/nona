@@ -4,6 +4,7 @@
 #include "lexer.h"
 #include "ast.h"
 #include "string_interning.h"
+#include "hashmap.h"
 #include <stdio.h>
 
 typedef struct parser
@@ -14,6 +15,7 @@ typedef struct parser
     size_t length; //tokens length
     size_t index; //current token index
     struct expression_info *ast; //
+    struct hashmap variables;
 } parser;
 
 parser parse_file(struct lexer_info lexing_info);

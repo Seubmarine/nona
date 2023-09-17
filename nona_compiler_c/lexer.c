@@ -20,6 +20,16 @@ int is_keyword(char *str) {
     return (i);
 }
 
+int is_number(char *str)
+{
+    size_t i = 0;
+    while (!isspace(str[i]) && (str[i] >= '0' && str[i] <= '9'))
+    {
+        i++;
+    }
+    return (i);
+}
+
 int str_to_token(char *str, size_t str_i, struct token *token) {
     while (isspace(str[str_i]))
         str_i++;
@@ -46,6 +56,13 @@ int str_to_token(char *str, size_t str_i, struct token *token) {
         {"{", token_bracket_curly_left},
         {"}", token_bracket_curly_right },
     };
+    size_t number_size = is_number(&str[str_i]);
+    if (number_size) {
+        token->type = token_integer;
+        token->span.begin = str_i;
+        token->span.end = str_i + number_size;
+        return (1);
+    }
     size_t keyword_size = is_keyword(&str[str_i]);
     if (keyword_size) //if detected a possible keyword
     {
@@ -145,6 +162,9 @@ void token_print_debug(char *filestr, struct token tok)
         break;
     case token_category_bracket:
         category_str = "Bracket";
+        break;
+    case token_category_literal:
+        category_str = "Literal";
         break;
     default:
         category_str = "ERROR";

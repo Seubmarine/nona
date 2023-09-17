@@ -125,12 +125,14 @@ struct operation *operation_init(enum operation_type op_type, struct expression_
     return (op);
 }
 
+#include <string.h>
 struct variable *variable_init(char *name, typeid type)
 {
     struct variable *var = malloc(sizeof(var) + sizeof(uint32_t));
+    memset(var, 0, sizeof(var) + sizeof(uint32_t));
     var->info.return_type = type;
-    var->var_name = name;
     var->info.expression_type = expression_type_variable;
+    var->var_name = name;
     return (var);
 }
 

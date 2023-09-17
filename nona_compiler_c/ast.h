@@ -3,8 +3,10 @@
 # include "inttypes.h"
 # include "vector.h"
 # include <stdbool.h>
+# include "hashmap.h"
 
 typedef char * typeid;
+#define typeid_unknown (NULL)
 
 enum operation_type {
     operation_type_addition,
@@ -77,6 +79,11 @@ struct literal *literal_init(uint32_t x, struct string_interner *si);
 struct operation *operation_init(enum operation_type op_type, struct expression_info *lhs, struct expression_info *rhs, struct string_interner *si);
 struct block *block_init();
 bool block_is_empty(struct block *block);
+
+struct variable *variable_init(char *name, typeid type);
+struct variable *variable_get(struct hashmap *hm, char *name);
+size_t variable_hash(void *key_value);
+bool variable_compare(void *hm, void *kv);
 
 struct return_fn *expression_return_init(struct expression_info *expr);
 struct return_scope *return_local_init(struct expression_info *expr);

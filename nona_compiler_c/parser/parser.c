@@ -2,7 +2,6 @@
 #include "ast.h"
 #include <stdbool.h>
 
-
 enum operation_type operation_type_from_token(enum token_type type) {
     enum operation_type op_type = operation_type_invalid;
     switch (type)
@@ -49,14 +48,42 @@ struct token *advance(parser *parser) {
     return previous(parser);
 }
 
+char *parser_intern_token(parser *parser, struct token *token) {
+    return string_intern(&parser->si, &parser->file_str[token->span.begin], token->span.end - token->span.begin);
+}
+
+typeid type(parser *parser) {
+    struct token *type_name = advance(parser);
+
+    if (type_name->type != token_identifier)
+        return NULL;
+    typeid id = parser_intern_token(parser, type_name);
+
+    return id;
+}
+
 void ast_traverse(struct expression_info *ast, uint32_t level ,void (*fn)(struct expression_info *, uint32_t))
 {
+    
     switch (ast->expression_type)
     {
     case expression_type_operation:
         ast_traverse(TO_OPERATOR(ast)->lhs, level + 1, fn);
         fn(ast, level);
         ast_traverse(TO_OPERATOR(ast)->rhs, level + 1, fn);
+        break;
+    case expression_type_block:
+        ;
+        struct block *bl = (struct block *)ast;
+        printf("{\n");
+        for (size_t i = 0; i < bl->expressions.length; i++)
+        {
+            ast_traverse(vector_expression_get(&bl->expressions, i), level + 1, fn);
+            printf("\n");
+            printf("\n");
+            printf("\n");
+        }
+        printf("}\n");
         break;
     default:
         fn(ast, level);
@@ -66,7 +93,10 @@ void ast_traverse(struct expression_info *ast, uint32_t level ,void (*fn)(struct
 bool check(parser *parser, enum token_type type) {
     if (is_at_end(parser))
         return false;
-    return peek(parser)->type == type;
+    struct token *p = peek(parser);
+    if (p == NULL)
+        return false;
+    return p->type == type;
 }
 
 #include <stdarg.h>
@@ -99,14 +129,18 @@ struct expression_info *parse_number(parser *parser, struct token token) {
 }
 
 struct block *block(parser *parser);
+struct expression_info *let_statement(parser *parser);
 
 struct expression_info *primary(parser *parser) {
     struct token *token = peek(parser);
-    
-    
-    if (token->type == token_identifier) {
+
+    if (token->type == token_integer)
+    {
         advance(parser);
         return parse_number(parser, *token);
+    }
+    else if (token->type == token_identifier) {
+        return TO_EXPR(variable_get(&parser->variables, parser_intern_token(parser, advance(parser))));
     }
     else if (token->type == token_bracket_curly_left) {
         return TO_EXPR(block(parser));
@@ -121,6 +155,9 @@ struct expression_info *primary(parser *parser) {
         struct expression_info *expr = expression(parser);
         if (advance(parser)->type == token_rbracket_right)
             return expr;
+    }
+    else if (token->type == token_let) {
+        return TO_EXPR(let_statement(parser));
     }
     return NULL;
 }
@@ -182,9 +219,40 @@ struct expression_info *equality(parser *parser) {
     return comparison(parser);
 }
 
+struct expression_info *assign(parser *parser) {
+    struct expression_info * lhs = equality(parser);
+    if (check(parser, token_equal)) {
+        advance(parser);
+        struct expression_info * rhs = equality(parser);
+        lhs = TO_EXPR(operation_init(operation_type_assign, lhs, rhs, &parser->si));
+    }
+    return lhs;
+}
+
 struct expression_info *expression(parser *parser) {
-    return equality(parser);
+    return assign(parser);
 } 
+
+struct expression_info *let_statement(parser *parser) {
+    if (check(parser, token_let)) {
+        advance(parser);
+        char *variable_name = parser_intern_token(parser, advance(parser));
+        typeid return_type = typeid_unknown; 
+        if (check(parser, token_colon)) {
+            advance(parser);
+            return_type = type(parser);
+        }
+        struct variable *var = variable_init(variable_name, return_type);
+        hashmap_insert(&parser->variables, &var);
+        struct token *assign = advance(parser);
+        if (assign->type != token_equal)
+            return NULL;
+        struct expression_info *right = expression(parser);
+
+        return TO_EXPR(operation_init(operation_type_assign, TO_EXPR(var), TO_EXPR(right), &parser->si));
+    }
+    return NULL;
+}
 
 void print_ast(struct expression_info *expr, uint32_t level) {
     for (size_t i = 0; i < level; i++)
@@ -194,6 +262,11 @@ void print_ast(struct expression_info *expr, uint32_t level) {
     
     switch (expr->expression_type)
     {
+    case expression_type_variable:
+        ;
+        struct variable *var = (struct variable *)expr;
+        printf("%s", var->var_name);
+        break;
     case expression_type_literal:
         ;
         struct literal *lit = (struct literal *)expr;
@@ -213,6 +286,9 @@ void print_ast(struct expression_info *expr, uint32_t level) {
             break;
         case operation_type_substract:
             printf("- ");
+            break;
+        case operation_type_assign:
+            printf("= ");
             break;
         default:
             printf("wtf ");
@@ -266,7 +342,8 @@ parser parse_file(struct lexer_info lexing_info)
         .length = lexing_info.token_length,
         .file_str = lexing_info.file_str,
         .si = lexing_info.string_interner,
-        .ast = NULL};
+        .ast = NULL,
+        .variables = hashmap_init(sizeof(struct variable *), variable_hash, variable_compare, NULL)};
     parser.ast = expression(&parser);
     ast_traverse(parser.ast, 0, print_ast);
     printf("\n");
