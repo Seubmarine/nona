@@ -17,7 +17,8 @@ enum token_type
     //Brackets
     token_rbracket_left, // (
     token_rbracket_right, // )
-
+    token_bracket_curly_left, // {
+    token_bracket_curly_right, // }
 
     //Separator
     token_semicolon,    // ;

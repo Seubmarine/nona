@@ -98,16 +98,29 @@ struct expression_info *parse_number(parser *parser, struct token token) {
     return TO_EXPR(lit);
 }
 
+struct block *block(parser *parser);
+
 struct expression_info *primary(parser *parser) {
-    struct token *token = advance(parser);
+    struct token *token = peek(parser);
     
-    if (token->type == token_rbracket_left) {
+    
+    if (token->type == token_identifier) {
+        advance(parser);
+        return parse_number(parser, *token);
+    }
+    else if (token->type == token_bracket_curly_left) {
+        return TO_EXPR(block(parser));
+    }
+    else if (token->type == token_rbracket_left) {
+        advance(parser);
+        // Detect unit type if the next direct token is a closed round bracket
+        if (peek(parser)->type == token_rbracket_right) {
+            advance(parser);
+            return unit_type_init(&parser->si);
+        }
         struct expression_info *expr = expression(parser);
         if (advance(parser)->type == token_rbracket_right)
             return expr;
-    }
-    else if (token->type == token_identifier) {
-        return parse_number(parser, *token);
     }
     return NULL;
 }
@@ -209,6 +222,40 @@ void print_ast(struct expression_info *expr, uint32_t level) {
         break;
     }
     printf("\n");
+}
+
+struct block *block(parser *parser)
+{
+    if (advance(parser)->type != token_bracket_curly_left)
+        return NULL;
+
+    struct block *block = block_init();
+
+    while (!check(parser, token_bracket_curly_right))
+    {
+        struct expression_info *new_expr = expression(parser);
+        vector_expression_push_back(&block->expressions, new_expr);
+
+        if (peek(parser)->type != token_semicolon) {
+            break ;
+        }
+        advance(parser);
+    }
+    if (advance(parser)->type != token_bracket_curly_right) {
+        //SOMETHING WENT WRONG
+        return NULL;
+    }
+    //Insert a unit_value inside of the block if the block doens't return anything
+    if (previous(parser)->type == token_semicolon && \
+        vector_expression_end(&block->expressions) != NULL && \
+        (*vector_expression_end(&block->expressions))->expression_type != expression_type_return_fn) {
+        vector_expression_push_back(&block->expressions, unit_type_init());
+    }
+    return block;
+}
+
+bool block_is_empty(struct block *block) {
+    return block->expressions.length == 0 || (*vector_expression_end(&block->expressions))->expression_type == expression_type_unit;
 }
 
 parser parse_file(struct lexer_info lexing_info)

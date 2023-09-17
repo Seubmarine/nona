@@ -28,6 +28,16 @@ int32_t i32_division(int32_t a, int32_t b) {
     return (a / b);
 }
 
+void    *block_execute(struct block *block, struct string_interner *si) {
+    void *return_value = NULL;
+    for (size_t i = 0; i < block->expressions.length; i++)
+    {
+        return_value = expression_get_data(vector_expression_get(&block->expressions, i), si);
+    }
+    
+    return return_value;
+}
+
 void    *expression_get_data(struct expression_info *expr, struct string_interner *si) {
     if (expr->expression_type == expression_type_literal)
     {
@@ -36,12 +46,15 @@ void    *expression_get_data(struct expression_info *expr, struct string_interne
     else if (expr->expression_type == expression_type_operation)
     {
         struct operation *op = (struct operation *)expr;
-        struct string_interner *si_tmp = si;
-        return (operation_apply(op, si_tmp));
+        return (operation_apply(op, si));
     }
     else if (expr->expression_type == expression_type_variable)
     {
         return (((struct variable *)expr)->data);
+    }
+    else if (expr->expression_type == expression_type_block)
+    {
+        return block_execute((struct block *)expr, si);
     }
     return (NULL);
 }
@@ -142,6 +155,35 @@ struct variable *variable_get(struct hashmap *hm, char *name)
     return (*(struct variable **)hashmap_get(hm, &tmp_ptr));
 }
 
+struct block *block_init()
+{
+    struct block *tmp = malloc(sizeof(*tmp));
+    tmp->expr_info.expression_type = expression_type_block;
+    tmp->expr_info.return_type = NULL;
+    tmp->expressions = vector_expression_init();
+    return (tmp);
+}
+
+struct return_scope *return_scope_init(struct expression_info *expr) {
+    struct return_scope *tmp = malloc(sizeof(*tmp));
+    tmp->expr_info.expression_type = expression_type_return_scope;
+    tmp->value = expr;
+    return tmp;
+}
+
+struct return_fn *return_fn_init(struct expression_info *expr) {
+    struct return_fn *tmp = malloc(sizeof(*tmp));
+    tmp->expr_info.expression_type = expression_type_return_scope;
+    tmp->value = expr;
+    return tmp;
+}
+
+struct expression_info *unit_type_init(struct string_interner *si) {
+    struct expression_info *tmp = malloc(sizeof(*tmp));
+    tmp->expression_type = expression_type_unit;
+    tmp->return_type = string_intern(si, "()", 2);
+    return tmp;
+}
 // int main(void)
 // {
 //     struct string_interner si = string_interner_init();

@@ -41,8 +41,10 @@ int str_to_token(char *str, size_t str_i, struct token *token) {
         {"*", token_asterisk},
         {"/", token_slash},
         {"=", token_equal},
-        {"(", token_rbracket_left}, // (
-        {")", token_rbracket_right }, // )
+        {"(", token_rbracket_left},
+        {")", token_rbracket_right },
+        {"{", token_bracket_curly_left},
+        {"}", token_bracket_curly_right },
     };
     size_t keyword_size = is_keyword(&str[str_i]);
     if (keyword_size) //if detected a possible keyword
@@ -94,6 +96,10 @@ enum token_category get_token_category(enum token_type token_type) {
     case token_rbracket_left:
         return (token_category_bracket);
     case token_rbracket_right:
+        return (token_category_bracket);
+    case token_bracket_curly_left:
+        return (token_category_bracket);
+    case token_bracket_curly_right:
         return (token_category_bracket);
 
     case token_equal:

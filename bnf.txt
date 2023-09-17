@@ -8,14 +8,14 @@ factor         -> unary ( ( "/" | "*" ) unary )* ;
 unary          -> ( "!" | "-" ) unary
                | primary ;
 primary        -> NUMBER | identifier | * identifier | "true" | "false" | "nil"
-               | "(" expression ")" ;
+               | "(" expression ")" | block_expr;
 
 
 identifier      -> [A-Z]
 
 let_stmt        -> "let" identifer "=" expr
 
-block_expr      -> "{" expr "}"
+block_expr      -> "{" (expr ';')* (expr) "}"
 
 if_stmt         -> "if" expr block_expr 
                     ("else" if_stmt)*
