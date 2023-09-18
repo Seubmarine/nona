@@ -128,7 +128,7 @@ struct operation *operation_init(enum operation_type op_type, struct expression_
 #include <string.h>
 struct variable *variable_init(char *name, typeid type)
 {
-    struct variable *var = malloc(sizeof(var) + sizeof(uint32_t));
+    struct variable *var = malloc(sizeof(*var) + sizeof(uint32_t));
     memset(var, 0, sizeof(var) + sizeof(uint32_t));
     var->info.return_type = type;
     var->info.expression_type = expression_type_variable;
@@ -185,6 +185,35 @@ struct expression_info *unit_type_init(struct string_interner *si) {
     tmp->expression_type = expression_type_unit;
     tmp->return_type = string_intern(si, "()", 2);
     return tmp;
+}
+
+union ast_helper
+{
+    struct expression_info *expr;
+    struct operation *op;
+    struct block *bl;
+};
+
+
+void ast_free(struct expression_info *expr) {
+    union ast_helper e = {0};
+    
+    e.expr = expr;
+    switch (expr->expression_type)
+    {
+    case expression_type_operation:
+        ast_free(e.op->lhs);
+        ast_free(e.op->rhs);
+        break;
+    case expression_type_block:
+        vector_expression_free(&e.bl->expressions);
+        break;
+    case expression_type_variable:
+        return ;        
+    default:
+        break;
+    }
+    free(expr);
 }
 // int main(void)
 // {

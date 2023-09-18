@@ -139,6 +139,18 @@ void *hashmap_insert(struct hashmap *hm, void *key_value)
     }
 }
 
+void hashmap_free(struct hashmap *hm) {
+    for (size_t index = 0; index < hm->length; index++)
+    {
+        void *hm_key_value = hm->data + (index * hm->key_value_size);
+        if (!is_empty(hm_key_value, hm->key_value_size)) {
+            hm->key_value_free_fn(*(void **)hm_key_value);
+        }
+    }
+    
+    free(hm->data);
+    memset(hm, 0, sizeof(*hm));
+}
 // #include <stdio.h>
 // #include <string.h>
 // #include <inttypes.h>

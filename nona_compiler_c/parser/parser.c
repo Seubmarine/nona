@@ -41,10 +41,9 @@ bool is_at_end(parser *parser) {
 }
 
 struct token *advance(parser *parser) {
-    if (!is_at_end(parser))
-        parser->index++;
-    else
+    if (is_at_end(parser))
         return NULL;
+    parser->index++;
     return previous(parser);
 }
 
@@ -343,7 +342,7 @@ parser parse_file(struct lexer_info lexing_info)
         .file_str = lexing_info.file_str,
         .si = lexing_info.string_interner,
         .ast = NULL,
-        .variables = hashmap_init(sizeof(struct variable *), variable_hash, variable_compare, NULL)};
+        .variables = hashmap_init(sizeof(struct variable *), variable_hash, variable_compare, free)};
     parser.ast = expression(&parser);
     ast_traverse(parser.ast, 0, print_ast);
     printf("\n");

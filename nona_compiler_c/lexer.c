@@ -172,7 +172,7 @@ void token_print_debug(char *filestr, struct token tok)
     }
     fprintf(debug_stream, "%s(", category_str);
     fwrite(&filestr[tok.span.begin], sizeof(char), tok.span.end - tok.span.begin, debug_stream);
-    fprintf(debug_stream, ")\n");
+    fprintf(debug_stream, ") [%zu, %zu]\n", tok.span.begin, tok.span.end);
 }
 
 #include "string_interning.h"
@@ -191,16 +191,16 @@ struct lexer_info lexer_file(char *filestr)
             tokens = realloc(tokens, sizeof(*tokens) * tokens_cap);
         }
         str_to_token(filestr, filestr_i, &tokens[token_i]);
-        if (tokens[token_i].type == token_eof)
-            break;
         filestr_i = tokens[token_i].span.end;
         token_i++;
+        if (tokens[token_i - 1].type == token_eof)
+            break;
     }
     for (size_t i = 0; i < token_i; i++)
     {
         token_print_debug(filestr, tokens[i]);
     }
-    if (tokens[token_i].type != token_eof)
+    if (tokens[token_i - 1].type != token_eof)
     {
         fprintf(debug_stream, "Nona: found invalid character at position: %zu\n", tokens[token_i].span.begin);
         free(tokens);
@@ -211,9 +211,8 @@ struct lexer_info lexer_file(char *filestr)
     for (size_t i = 0; i < token_i; i++)
     {
         if (tokens[i].type == token_identifier)
-            identifier_n += 1;
-        if (tokens[i].type == token_identifier)
         {
+            identifier_n += 1;
             struct span s = tokens[i].span;
             char *tmp = string_intern(&si, &filestr[s.begin], s.end - s.begin);
             printf("%p = %s\n", tmp, tmp);
@@ -222,7 +221,7 @@ struct lexer_info lexer_file(char *filestr)
     printf("token count == %zi\n", token_i);
     printf("identifier count == %zi\n", identifier_n);
     printf("string interner cap: %zu len: %zu\n", si.capacity, si.length);
-    tokens = realloc(tokens, token_i);
+    tokens = realloc(tokens, sizeof(*tokens) * token_i);
     lexing_info.string_interner = si;
     lexing_info.token_length = token_i;
     lexing_info.tokens = tokens;

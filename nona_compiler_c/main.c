@@ -33,6 +33,10 @@ int open_file(char const *filename)
     parser parser = parse_file(lexer_info);
     uint32_t *t = expression_get_data(parser.ast, &parser.si);
     printf("result = %i\n", *t);
+    ast_free(parser.ast);
+    hashmap_free(&parser.variables);
+    string_interner_free(&parser.si);
+    free(parser.tokens);
     free(file_str);
     return (1);
 }

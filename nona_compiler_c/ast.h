@@ -44,8 +44,9 @@ struct return_fn {
     struct expression_info *value;
 };
 
+void ast_free(struct expression_info *expr);
 
-VECTOR_DEFINE(struct expression_info *, expression)
+VECTOR_DEFINE_WITH_FREE(struct expression_info *, expression, ast_free)
 
 struct block {
     struct expression_info expr_info;
